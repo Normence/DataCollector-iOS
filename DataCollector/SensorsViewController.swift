@@ -10,6 +10,8 @@ import UIKit
 import CoreMotion
 import CoreLocation
 
+//TODO: data files management
+
 //parameters
 //to be stored in another file probably
 let defaultMapID = 5
@@ -136,12 +138,98 @@ class SensorsViewController: UIViewController {
         let time = Double(t_time)
         
         var dataItem = "\(time)"
-        dataItem += " \(motionManager.deviceMotion?.userAcceleration.x) \(motionManager.deviceMotion?.userAcceleration.y) \(motionManager.deviceMotion?.userAcceleration.z)"
-        dataItem += " \(motionManager.deviceMotion?.gravity.x) \(motionManager.deviceMotion?.gravity.y) \(motionManager.deviceMotion?.gravity.z)"
-        dataItem += " \(motionManager.deviceMotion?.attitude.roll) \(motionManager.deviceMotion?.attitude.pitch) \(motionManager.deviceMotion?.attitude.yaw)"
-        dataItem += " \(motionManager.gyroData?.rotationRate.x) \(motionManager.gyroData?.rotationRate.y) \(motionManager.gyroData?.rotationRate.z)"
-        dataItem += " \(locationManager.heading?.trueHeading) \(locationManager.heading?.magneticHeading)  \(locationManager.heading?.headingAccuracy)"
-        dataItem += " \(motionManager.deviceMotion?.magneticField.field.x) \(motionManager.deviceMotion?.magneticField.field.y) \(motionManager.deviceMotion?.magneticField.field.z)\n"
+        
+        if let t = motionManager.deviceMotion?.userAcceleration.x {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.userAcceleration.y {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.userAcceleration.z {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.gravity.x {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.gravity.y {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.gravity.z {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.attitude.roll {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.attitude.pitch {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.attitude.yaw {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.gyroData?.rotationRate.x {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.gyroData?.rotationRate.y {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.gyroData?.rotationRate.z {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.magneticField.field.x {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.magneticField.field.y {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.magneticField.field.z {
+            dataItem = dataItem + " " + String(t)
+        } else {
+            dataItem = dataItem + " 0.000"
+        }
+        
+        dataItem += "\n"
         
         //write data into files
         dataFileHandle.writeData(dataItem.dataUsingEncoding(NSUTF8StringEncoding)!)
@@ -159,7 +247,7 @@ class SensorsViewController: UIViewController {
                 statusTextView.text = t
                 adjustStatusTextFormat(statusTextView)
             }
-            //display
+            //TODO: display
         }
         refreshCount %= refreshTime
     }

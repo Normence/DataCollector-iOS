@@ -1,0 +1,24 @@
+/*
+ * DataFormat.txt
+ */
+
+iOS //the necessity of these data remain doubted
+数据名			数据引用						单位		描述
+userAcceleration(acc)	CMMotionManager.deviceMotion.			g(9.8m/s^2)	x, y, z
+gravity(g)		CMMotionManager.deviceMotion.			g(9.8m/s^2)	x, y, z
+rotationRate(rate)	CMMotionManager.gyroData
+attitude(a.)		CMMotionManager.deviceMotion.			rad		yaw, roll, pitch
+heading	(h.)		CLLocationManager.						trueHeading, magneticHeading, headingAccuracy
+field(f)		CMMotionManager.deviceMotion.magneticField. 			x, y, z
+
+
+
+Android    // to be accomplished
+数据名			数据引用						单位		描述
+
+
+
+
+
+Internal
+(temporary): TimeStamp accX accY accZ gX gY gZ a.roll a.pitch a.yaw rateX rateY rateZ h.true h.magn h.accu fieldX fieldY fieldZ
