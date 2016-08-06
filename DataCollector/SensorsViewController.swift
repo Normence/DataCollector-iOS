@@ -18,6 +18,7 @@ let defaultMapID = 5
 let defaultPoseID = 1
 let defaultTraceID = 1
 let refreshTime = 50
+var refreshCount = 0   //update UI and Log per refreshTime
 /////
 
 class SensorsViewController: UIViewController {
@@ -36,7 +37,6 @@ class SensorsViewController: UIViewController {
     var fileManager = NSFileManager.defaultManager()
     var dataFileHandle = NSFileHandle.init()
     var timer = NSTimer.init()
-    var refreshCount = 0
 
     
     override func viewDidLoad() {
@@ -276,8 +276,13 @@ class SensorsViewController: UIViewController {
             
             traceID += 1
             traceTextField.text = String(traceID)
+            
+            //stop sensors
             timer.invalidate()
             dataFileHandle.closeFile()
+            motionManager.stopGyroUpdates()
+            motionManager.stopDeviceMotionUpdates()
+            motionManager.stopMagnetometerUpdates()
             
             statusTextView.text = "Status: STOP"
             adjustStatusTextFormat(statusTextView)
