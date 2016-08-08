@@ -19,6 +19,7 @@ let defaultPoseID = 1
 let defaultTraceID = 1
 let refreshTime = 50
 var refreshCount = 0   //update UI and Log per refreshTime
+let dataUpdateInterval = 1.0/50.0
 /////
 
 class SensorsViewController: UIViewController {
@@ -67,7 +68,7 @@ class SensorsViewController: UIViewController {
         
         if motionManager.deviceMotionAvailable{
             NSLog("DeviceMotion Available", self)
-            motionManager.deviceMotionUpdateInterval = 1.0/50.0
+            motionManager.deviceMotionUpdateInterval = dataUpdateInterval
             motionManager.startDeviceMotionUpdates()
         }
         else{
@@ -75,7 +76,7 @@ class SensorsViewController: UIViewController {
         }
         if motionManager.gyroAvailable{
             NSLog("Gyro Available", self)
-            motionManager.gyroUpdateInterval = 1.0/50.0
+            motionManager.gyroUpdateInterval = dataUpdateInterval
             motionManager.startGyroUpdates()
         }
         else{
@@ -83,7 +84,7 @@ class SensorsViewController: UIViewController {
         }
         if motionManager.magnetometerAvailable{
             NSLog("Magnetometer Available", self)
-            motionManager.magnetometerUpdateInterval = 1.0/50.0
+            motionManager.magnetometerUpdateInterval = dataUpdateInterval
             motionManager.startMagnetometerUpdates()
         }
         else{
@@ -127,7 +128,7 @@ class SensorsViewController: UIViewController {
         
         statusTextView.text = "Status: Collecting."
         adjustStatusTextFormat(statusTextView)
-        timer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(getSensorsData(_:)), userInfo: nil, repeats: true)
+        timer = NSTimer.scheduledTimerWithTimeInterval(dataUpdateInterval, target: self, selector: #selector(getSensorsData(_:)), userInfo: nil, repeats: true)
     }
     
     //get sensors data and write into files and display on the screen
