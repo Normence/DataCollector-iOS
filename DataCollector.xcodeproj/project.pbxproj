@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7470B0C31D587B6000DAD441 /* dThaUEtVeFJOeVM1d0FqUTNIN1BOUGV2bEV2VnRPVXY1RjJ2NTlVOW8rOU9MUmZqRThrUTZBPT0.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 7470B0C21D587B6000DAD441 /* dThaUEtVeFJOeVM1d0FqUTNIN1BOUGV2bEV2VnRPVXY1RjJ2NTlVOW8rOU9MUmZqRThrUTZBPT0.jpg */; };
+		7470B0C51D587C3600DAD441 /* sunrise.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 7470B0C41D587C3600DAD441 /* sunrise.jpg */; };
+		7470B0CD1D5881E100DAD441 /* RecognizerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7470B0CC1D5881E100DAD441 /* RecognizerViewController.swift */; };
+		7470B0CF1D58841C00DAD441 /* paras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7470B0CE1D58841C00DAD441 /* paras.swift */; };
+		7470B0D31D58871800DAD441 /* UIControlFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7470B0D21D58871800DAD441 /* UIControlFunctions.swift */; };
 		748049351D4756E900ABAB44 /* Gestures.png in Resources */ = {isa = PBXBuildFile; fileRef = 7480492F1D4756E900ABAB44 /* Gestures.png */; };
 		748049361D4756E900ABAB44 /* Gestures@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 748049301D4756E900ABAB44 /* Gestures@2x.png */; };
 		748049371D4756E900ABAB44 /* Gestures@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 748049311D4756E900ABAB44 /* Gestures@3x.png */; };
@@ -43,7 +46,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		7470B0C21D587B6000DAD441 /* dThaUEtVeFJOeVM1d0FqUTNIN1BOUGV2bEV2VnRPVXY1RjJ2NTlVOW8rOU9MUmZqRThrUTZBPT0.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dThaUEtVeFJOeVM1d0FqUTNIN1BOUGV2bEV2VnRPVXY1RjJ2NTlVOW8rOU9MUmZqRThrUTZBPT0.jpg; sourceTree = "<group>"; };
+		7470B0C41D587C3600DAD441 /* sunrise.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = sunrise.jpg; sourceTree = "<group>"; };
+		7470B0CC1D5881E100DAD441 /* RecognizerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecognizerViewController.swift; sourceTree = "<group>"; };
+		7470B0CE1D58841C00DAD441 /* paras.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = paras.swift; sourceTree = "<group>"; };
+		7470B0D21D58871800DAD441 /* UIControlFunctions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIControlFunctions.swift; sourceTree = "<group>"; };
 		7480492F1D4756E900ABAB44 /* Gestures.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Gestures.png; sourceTree = "<group>"; };
 		748049301D4756E900ABAB44 /* Gestures@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gestures@2x.png"; sourceTree = "<group>"; };
 		748049311D4756E900ABAB44 /* Gestures@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gestures@3x.png"; sourceTree = "<group>"; };
@@ -95,7 +101,7 @@
 		7470B0C11D5878A600DAD441 /* image */ = {
 			isa = PBXGroup;
 			children = (
-				7470B0C21D587B6000DAD441 /* dThaUEtVeFJOeVM1d0FqUTNIN1BOUGV2bEV2VnRPVXY1RjJ2NTlVOW8rOU9MUmZqRThrUTZBPT0.jpg */,
+				7470B0C41D587C3600DAD441 /* sunrise.jpg */,
 				7480492F1D4756E900ABAB44 /* Gestures.png */,
 				748049301D4756E900ABAB44 /* Gestures@2x.png */,
 				748049311D4756E900ABAB44 /* Gestures@3x.png */,
@@ -133,6 +139,9 @@
 				74C283B31D46373D0011E00A /* AppDelegate.swift */,
 				74C283B51D46373D0011E00A /* ViewController.swift */,
 				74C283E31D463FE80011E00A /* SensorsViewController.swift */,
+				7470B0CC1D5881E100DAD441 /* RecognizerViewController.swift */,
+				7470B0CE1D58841C00DAD441 /* paras.swift */,
+				7470B0D21D58871800DAD441 /* UIControlFunctions.swift */,
 				74C283B71D46373D0011E00A /* Main.storyboard */,
 				74C283BA1D46373D0011E00A /* Assets.xcassets */,
 				74C283BC1D46373D0011E00A /* LaunchScreen.storyboard */,
@@ -265,7 +274,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7470B0C31D587B6000DAD441 /* dThaUEtVeFJOeVM1d0FqUTNIN1BOUGV2bEV2VnRPVXY1RjJ2NTlVOW8rOU9MUmZqRThrUTZBPT0.jpg in Resources */,
+				7470B0C51D587C3600DAD441 /* sunrise.jpg in Resources */,
 				74C283BE1D46373D0011E00A /* LaunchScreen.storyboard in Resources */,
 				7480493A1D4756E900ABAB44 /* Players@3x.png in Resources */,
 				748049371D4756E900ABAB44 /* Gestures@3x.png in Resources */,
@@ -300,7 +309,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7470B0CD1D5881E100DAD441 /* RecognizerViewController.swift in Sources */,
 				74C283B61D46373D0011E00A /* ViewController.swift in Sources */,
+				7470B0CF1D58841C00DAD441 /* paras.swift in Sources */,
+				7470B0D31D58871800DAD441 /* UIControlFunctions.swift in Sources */,
 				74C283E41D463FE80011E00A /* SensorsViewController.swift in Sources */,
 				74C283B41D46373D0011E00A /* AppDelegate.swift in Sources */,
 			);

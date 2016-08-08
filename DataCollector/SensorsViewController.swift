@@ -12,16 +12,6 @@ import CoreLocation
 
 //TODO: data files management
 
-//parameters
-//to be stored in another file probably
-let defaultMapID = 5
-let defaultPoseID = 1
-let defaultTraceID = 1
-let refreshTime = 50
-var refreshCount = 0   //update UI and Log per refreshTime
-let dataUpdateInterval = 1.0/50.0
-/////
-
 class SensorsViewController: UIViewController {
     @IBOutlet var startButton: UIButton!
     @IBOutlet var mapTextField: UITextField!
@@ -55,12 +45,6 @@ class SensorsViewController: UIViewController {
     
     
     /* sensors control */
-    func adjustStatusTextFormat(textView: UITextView){
-        textView.textColor = UIColor.grayColor()
-        textView.font = UIFont.systemFontOfSize(10)
-        textView.textAlignment = NSTextAlignment.Center
-    }
-    
     func startSensors(){
         //initialize sensors
         statusTextView.text = "Status: Initializing..."
@@ -317,7 +301,7 @@ class SensorsViewController: UIViewController {
         self.view.frame = rect
         UIView.commitAnimations()
     }
-    
+
     @IBAction func mapTextFieldBeginEdit(sender: UITextField) {
         raiseView()
     }

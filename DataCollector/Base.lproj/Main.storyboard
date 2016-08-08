@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="5qb-p6-y3R">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="5qb-p6-y3R">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
     </dependencies>
     <scenes>
-        <!--Backup-->
+        <!--Motion Recognizer-->
         <scene sceneID="hc1-Td-cbl">
             <objects>
-                <viewController title="Backup" id="FgD-Z3-q8n" sceneMemberID="viewController">
+                <viewController title="Motion Recognizer" id="FgD-Z3-q8n" customClass="RecognizerViewController" customModule="DataCollector" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="T9P-Bk-oxn"/>
                         <viewControllerLayoutGuide type="bottom" id="m6b-C6-TRc"/>
@@ -16,9 +16,84 @@
                     <view key="view" contentMode="scaleToFill" id="yZV-pS-LuS">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="Map" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Vk4-gB-7I1">
+                                <rect key="frame" x="20" y="489" width="47" height="30"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="18"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="Pose" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qFT-uG-04T">
+                                <rect key="frame" x="20" y="531" width="57" height="30"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="Trace" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hCn-8E-7uy">
+                                <rect key="frame" x="20" y="571" width="58" height="30"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="3Gc-kn-NAJ">
+                                <rect key="frame" x="81" y="489" width="40" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation" returnKeyType="done" enablesReturnKeyAutomatically="YES"/>
+                                <connections>
+                                    <action selector="mapTextFieldBeginEdit:" destination="FgD-Z3-q8n" eventType="editingDidBegin" id="aKh-YL-jxG"/>
+                                    <action selector="mapTextFieldEdited:" destination="FgD-Z3-q8n" eventType="editingDidEndOnExit" id="vnh-wt-lTa"/>
+                                </connections>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="qO8-cg-qek">
+                                <rect key="frame" x="81" y="531" width="40" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation" returnKeyType="done" enablesReturnKeyAutomatically="YES"/>
+                                <connections>
+                                    <action selector="poseTextFieldBeginEdit:" destination="FgD-Z3-q8n" eventType="editingDidBegin" id="4U5-Nd-uQJ"/>
+                                    <action selector="poseTextFieldEdited:" destination="FgD-Z3-q8n" eventType="editingDidEndOnExit" id="aYO-nO-EEy"/>
+                                </connections>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="VyB-dW-dTJ">
+                                <rect key="frame" x="81" y="571" width="40" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation" returnKeyType="done" enablesReturnKeyAutomatically="YES"/>
+                                <connections>
+                                    <action selector="traceTextFieldBeginEdit:" destination="FgD-Z3-q8n" eventType="editingDidBegin" id="M6J-fq-Pxm"/>
+                                    <action selector="traceTextFieldEdited:" destination="FgD-Z3-q8n" eventType="editingDidEndOnExit" id="QAs-Ui-7Bw"/>
+                                </connections>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zb8-VG-0L1">
+                                <rect key="frame" x="164" y="531" width="47" height="30"/>
+                                <state key="normal" title="START"/>
+                                <connections>
+                                    <action selector="startButtonTouched:" destination="FgD-Z3-q8n" eventType="touchUpInside" id="E3M-Lm-hEc"/>
+                                </connections>
+                            </button>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" text="Choose file: " textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="hp1-UG-5Dl">
+                                <rect key="frame" x="20" y="456" width="92" height="30"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="Stauts: STOP" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cEj-uW-yYV">
+                                <rect key="frame" x="124" y="592" width="127" height="26"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" red="0.43529411759999997" green="0.4431372549" blue="0.47450980390000003" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
-                    <navigationItem key="navigationItem" title="BackUp" id="Mkt-yQ-nm8"/>
+                    <navigationItem key="navigationItem" title="Motion Recognizer" id="Mkt-yQ-nm8"/>
+                    <connections>
+                        <outlet property="mapTextField" destination="3Gc-kn-NAJ" id="cRz-Gx-hfR"/>
+                        <outlet property="poseTextField" destination="qO8-cg-qek" id="RNX-bp-Nlp"/>
+                        <outlet property="startButton" destination="zb8-VG-0L1" id="AoY-ke-cb8"/>
+                        <outlet property="statusTextView" destination="cEj-uW-yYV" id="SKi-Tj-sMU"/>
+                        <outlet property="traceTextField" destination="VyB-dW-dTJ" id="Q9c-MZ-ENp"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="zDO-NZ-dwc" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -82,59 +157,46 @@
                                     <action selector="traceTextFieldEdited:" destination="CCv-K2-R2H" eventType="editingDidEndOnExit" id="TJT-Jk-xzG"/>
                                 </connections>
                             </textField>
-                            <stackView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="oZd-y3-gSo">
-                                <rect key="frame" x="288" y="482" width="67" height="120"/>
-                                <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GbP-ro-hh2">
-                                        <rect key="frame" x="0.0" y="0.0" width="67" height="30"/>
-                                        <state key="normal" title="BUMPER">
-                                            <color key="titleColor" red="0.13731941018676821" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                        </state>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9q4-fi-H8N">
-                                        <rect key="frame" x="0.0" y="30" width="67" height="30"/>
-                                        <state key="normal" title="CORNER">
-                                            <color key="titleColor" red="0.13731941019999999" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                        </state>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jbs-g1-dDR">
-                                        <rect key="frame" x="0.0" y="60" width="67" height="30"/>
-                                        <state key="normal" title="PAUSE">
-                                            <color key="titleColor" red="0.13731941019999999" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                        </state>
-                                    </button>
-                                    <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5RY-hB-gUC">
-                                        <rect key="frame" x="0.0" y="90" width="67" height="30"/>
-                                        <state key="normal" title="BACKOFF">
-                                            <color key="titleColor" red="0.13731941019999999" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                        </state>
-                                    </button>
-                                </subviews>
-                            </stackView>
-                            <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zxm-DV-8vi">
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GbP-ro-hh2">
+                                <rect key="frame" x="288" y="573" width="67" height="30"/>
+                                <state key="normal" title="BUMPER">
+                                    <color key="titleColor" red="0.13731941018676821" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9q4-fi-H8N">
+                                <rect key="frame" x="288" y="543" width="67" height="30"/>
+                                <state key="normal" title="CORNER">
+                                    <color key="titleColor" red="0.13731941019999999" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jbs-g1-dDR">
+                                <rect key="frame" x="288" y="515" width="67" height="30"/>
+                                <state key="normal" title="PAUSE">
+                                    <color key="titleColor" red="0.13731941019999999" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5RY-hB-gUC">
+                                <rect key="frame" x="288" y="485" width="67" height="30"/>
+                                <state key="normal" title="BACKOFF">
+                                    <color key="titleColor" red="0.13731941019999999" green="0.89074213179999995" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zxm-DV-8vi">
                                 <rect key="frame" x="164" y="527" width="47" height="30"/>
                                 <state key="normal" title="START"/>
                                 <connections>
                                     <action selector="sensorsButtonTouched:" destination="CCv-K2-R2H" eventType="touchUpInside" id="1zX-Co-oXw"/>
                                 </connections>
                             </button>
-                            <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="Yzn-F9-BcA">
-                                <rect key="frame" x="119" y="588" width="137" height="50"/>
-                                <subviews>
-                                    <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" editable="NO" text="Stauts: STOP" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mJ7-lV-cHE">
-                                        <rect key="frame" x="0.0" y="0.0" width="137" height="50"/>
-                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        <color key="textColor" red="0.43529411759999997" green="0.4431372549" blue="0.47450980390000003" alpha="1" colorSpace="calibratedRGB"/>
-                                        <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
-                                        <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
-                                    </textView>
-                                </subviews>
-                            </stackView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="Stauts: STOP" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mJ7-lV-cHE">
+                                <rect key="frame" x="124" y="593" width="127" height="25"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" red="0.43529411759999997" green="0.4431372549" blue="0.47450980390000003" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="Yzn-F9-BcA" firstAttribute="top" secondItem="zxm-DV-8vi" secondAttribute="bottom" constant="31" id="VZx-Tk-nXB"/>
-                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Sensors" id="yZw-g2-2l6"/>
                     <connections>
@@ -187,11 +249,11 @@
             </objects>
             <point key="canvasLocation" x="556.5" y="-51.5"/>
         </scene>
-        <!--BackUp-->
+        <!--Recognizer Navigation-->
         <scene sceneID="Waz-Om-GJp">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="TdL-o9-GSE" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="BackUp" image="Players.png" id="4Bs-ZT-TdO"/>
+                <navigationController title="Recognizer Navigation" automaticallyAdjustsScrollViewInsets="NO" id="TdL-o9-GSE" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="Recognizer" image="Players.png" id="4Bs-ZT-TdO"/>
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="joF-Wi-6Xl">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
