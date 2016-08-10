@@ -9,7 +9,8 @@
 import Foundation
 import UIKit
 
-func adjustStatusTextFormat(textView: UITextView){
+func setStatusText(textView: UITextView, s: String){
+    textView.text = s
     textView.textColor = UIColor.grayColor()
     textView.font = UIFont.systemFontOfSize(10)
     textView.textAlignment = NSTextAlignment.Center

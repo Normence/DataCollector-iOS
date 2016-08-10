@@ -83,11 +83,19 @@
                                 <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" text="STATUS" textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="wyy-m3-CEF">
+                                <rect key="frame" x="43" y="206" width="288" height="84"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" red="0.4455118247" green="0.86350621729999999" blue="0.044073915829999998" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="60"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <navigationItem key="navigationItem" title="Motion Recognizer" id="Mkt-yQ-nm8"/>
                     <connections>
+                        <outlet property="RecognitionTextView" destination="wyy-m3-CEF" id="CrP-5c-k9l"/>
                         <outlet property="mapTextField" destination="3Gc-kn-NAJ" id="cRz-Gx-hfR"/>
                         <outlet property="poseTextField" destination="qO8-cg-qek" id="RNX-bp-Nlp"/>
                         <outlet property="startButton" destination="zb8-VG-0L1" id="AoY-ke-cb8"/>

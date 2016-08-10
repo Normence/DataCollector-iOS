@@ -47,8 +47,7 @@ class SensorsViewController: UIViewController {
     /* sensors control */
     func startSensors(){
         //initialize sensors
-        statusTextView.text = "Status: Initializing..."
-        adjustStatusTextFormat(statusTextView)
+        setStatusText(statusTextView, s: "Status: Initializing...")
         
         if motionManager.deviceMotionAvailable{
             NSLog("DeviceMotion Available", self)
@@ -79,6 +78,7 @@ class SensorsViewController: UIViewController {
         var paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
         let documentsDirectory = paths[0]
         
+        /*
             //get current time
         let date = NSDate.init()
         let time = date.timeIntervalSince1970
@@ -100,9 +100,10 @@ class SensorsViewController: UIViewController {
             return
         }
         NSLog("Successfully create current directory", self)
+         */
    
             //create data files
-        let dataPath = currentDirectory.stringByAppendingString("/parking\(mapID)pose\(poseID)trace\(traceID).txt")
+        let dataPath = documentsDirectory.stringByAppendingString("/parking\(mapID)pose\(poseID)trace\(traceID).txt")
         fileManager.createFileAtPath(dataPath, contents: nil, attributes: nil)
         dataFileHandle = NSFileHandle.init(forWritingAtPath: dataPath)!
         
@@ -110,8 +111,7 @@ class SensorsViewController: UIViewController {
         let dataHead = "TimeStamp" + " accX accY accZ" + " gX gY gZ" + " a.roll a.pitch a.yaw" + " rateX rateY rateZ" + " h.true h.magn h.accu" + " fieldX fieldY fieldZ\n"
         dataFileHandle.writeData(dataHead.dataUsingEncoding(NSUTF8StringEncoding)!)
         
-        statusTextView.text = "Status: Collecting."
-        adjustStatusTextFormat(statusTextView)
+        setStatusText(statusTextView, s: "Status: Collecting.")
         timer = NSTimer.scheduledTimerWithTimeInterval(dataUpdateInterval, target: self, selector: #selector(getSensorsData(_:)), userInfo: nil, repeats: true)
     }
     
@@ -224,13 +224,11 @@ class SensorsViewController: UIViewController {
         if refreshCount == refreshTime{
             NSLog(dataItem, self)
             if let t = statusTextView.text where t.hasSuffix("..."){
-                statusTextView.text = "Status: Collecting."
-                adjustStatusTextFormat(statusTextView)
+                setStatusText(statusTextView, s: "Status: Collecting.")
             }
             else{
                 let t = statusTextView.text + "."
-                statusTextView.text = t
-                adjustStatusTextFormat(statusTextView)
+                setStatusText(statusTextView, s: t)
             }
             //TODO: display
         }
@@ -245,8 +243,7 @@ class SensorsViewController: UIViewController {
             poseTextField.enabled = false
             traceTextField.enabled = false
             startButton.setTitle("STOP", forState: .Normal)
-            statusTextView.text = "Status: Starting..."
-            adjustStatusTextFormat(statusTextView)
+            setStatusText(statusTextView, s: "Status: Starting...")
             
             //start sensors
             startSensors()
@@ -269,8 +266,7 @@ class SensorsViewController: UIViewController {
             motionManager.stopDeviceMotionUpdates()
             motionManager.stopMagnetometerUpdates()
             
-            statusTextView.text = "Status: STOP"
-            adjustStatusTextFormat(statusTextView)
+            setStatusText(statusTextView, s: "Status: STOP")
         }
     }
     //////////////
