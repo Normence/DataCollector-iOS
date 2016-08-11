@@ -27,6 +27,8 @@ class RecognizerViewController: UIViewController {
     var dataLen = 0
     var dataCount = 1
     var timer = NSTimer.init()
+    var τMax = defaultMaxτ
+    var τMin = defaultMinτ
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -127,10 +129,32 @@ class RecognizerViewController: UIViewController {
                 recognitionTextView.text = "IDLE"
                 NSLog("Motion Recognized as IDLE with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
                 outputString = "IDLE"
+                τMax = defaultMaxτ
+                τMin = defaultMinτ
             } else {
                 //walking or moving
-                recognitionTextView.text = "WALKING"
-                NSLog("Motion Recognized as WALKING with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
+                var nacMax = 0.00
+                var nacMax_τ = 0
+                for τ in τMin...τMax {
+                    let nac = calculateNAC(datas, begin: dataCount, end: dataCount + τ - 1)
+                    let t = max(nac.x, y: nac.y, z: nac.z)
+                    if t > nacMax {
+                        nacMax = t
+                        nacMax_τ = τ
+                        τMax = τ + 10
+                        τMin = τ - 10
+                    }
+                }
+                
+                if nacMax > 0.7 {
+                    //WALKING
+                    recognitionTextView.text = "WALKING"
+                    NSLog("Motion Recognized as WALKING with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
+                }
+                
+                
+                //walking or moving
+                
                 outputString = "WALKING"
             }
             outputString += ", index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z)\n"
@@ -241,6 +265,123 @@ class RecognizerViewController: UIViewController {
         
         let avg = threeAxisData.init(x: sum_x / Double(nums), y: sum_y / Double(nums), z: sum_z / Double(nums))
         return avg
+    }
+    
+    func calculateNAC(datas: [String]?, begin: Int, end: Int) -> threeAxisData {  //{∑<k=0...k=τ-1> [(a(m+k]-μ(m,τ))·(a(m+k+τ)-μ(m+τ,τ))]}/τσ(m,τ)σ(m+τ,τ)
+        
+        let τ = (end - begin + 1)
+        let μ_m_τ = calculateAvg(datas, begin: begin, end: end)
+        let σ_m_τ = calculateSD(datas, begin: begin, end: end)
+        var μ_m＋τ_τ: threeAxisData
+        var σ_m＋τ_τ: threeAxisData
+        if (begin + τ) >= dataLen {
+            μ_m＋τ_τ = threeAxisData.init(x: 0, y: 0, z: 0)
+            σ_m＋τ_τ = threeAxisData.init(x: 0, y: 0, z: 0)
+        } else {
+            μ_m＋τ_τ = calculateAvg(datas, begin: begin + τ, end: begin + τ + τ - 1)
+            σ_m＋τ_τ = calculateSD(datas, begin: begin + τ, end: begin + τ + τ - 1)
+        }
+        
+        
+        var sum_x = 0.00
+        var sum_y = 0.00
+        var sum_z = 0.00
+        
+        for i in begin...end {
+            var temp1_x = 0.00
+            var temp1_y = 0.00
+            var temp1_z = 0.00
+            var temp2_x = 0.00
+            var temp2_y = 0.00
+            var temp2_z = 0.00
+            
+            if i < dataLen{
+                if !datas![i].isEmpty {
+                    let temp_data = datas![i].componentsSeparatedByString(" ")
+                    if temp_data.count == dataItemNumber {
+                        if let ax = Double(temp_data[1]){
+                            temp1_x += ax - μ_m_τ.x
+                        }
+                        if let ay = Double(temp_data[2]){
+                            temp1_y += ay - μ_m_τ.y
+                        }
+                        if let az = Double(temp_data[3]){
+                            temp1_z += az - μ_m_τ.z
+                        }
+                    }
+                }
+            } else {
+                temp1_x -= μ_m_τ.x
+                temp1_y -= μ_m_τ.y
+                temp1_z -= μ_m_τ.z
+            }
+            
+            if (i + τ) < dataLen{
+                if !datas![i+τ].isEmpty {
+                    let temp_data = datas![i+τ].componentsSeparatedByString(" ")
+                    if temp_data.count == dataItemNumber {
+                        if let ax = Double(temp_data[1]){
+                            temp2_x += ax - μ_m＋τ_τ.x
+                        }
+                        if let ay = Double(temp_data[2]){
+                            temp2_y += ay - μ_m＋τ_τ.y
+                        }
+                        if let az = Double(temp_data[3]){
+                            temp2_z += az - μ_m＋τ_τ.z
+                        }
+                    }
+                }
+            } else {
+                temp2_x -= μ_m＋τ_τ.x
+                temp2_y -= μ_m＋τ_τ.y
+                temp2_z -= μ_m＋τ_τ.z
+            }
+            
+            sum_x += (temp1_x * temp2_x)
+            sum_y += (temp1_y * temp2_y)
+            sum_z += (temp1_z * temp2_z)
+        }
+        
+        let temp3_x = (Double(τ) * σ_m_τ.x * σ_m＋τ_τ.x)
+        let temp3_y = (Double(τ) * σ_m_τ.y * σ_m＋τ_τ.y)
+        let temp3_z = (Double(τ) * σ_m_τ.z * σ_m＋τ_τ.z)
+        
+        var NAC_x, NAC_y, NAC_z: Double
+        if temp3_x != 0 {
+            NAC_x = sum_x / temp3_x
+        } else {
+            NAC_x = 0
+        }
+        if temp3_y != 0{
+            NAC_y = sum_y / temp3_y
+        } else {
+            NAC_y = 0
+        }
+        if temp3_z != 0 {
+            NAC_z = sum_z / temp3_z
+        } else {
+            NAC_z = 0
+        }
+        
+        let nac = threeAxisData.init(x: NAC_x, y: NAC_y, z: NAC_z)
+        
+        return nac
+    }
+    
+    func max(x: Double, y: Double, z: Double) -> Double {
+        if x > y {
+            if x > z {
+                return x
+            } else {
+                return z
+            }
+        } else {
+            if y > z {
+                return y
+            } else {
+                return z
+            }
+        }
     }
     /////////////////
     
