@@ -18,6 +18,9 @@ class SensorsViewController: UIViewController {
     @IBOutlet var poseTextField: UITextField!
     @IBOutlet var traceTextField: UITextField!
     @IBOutlet var statusTextView: UITextView!
+    @IBOutlet var displayTextView1: UITextView!
+    @IBOutlet var displayTextView2: UITextView!
+    @IBOutlet var displayTextView3: UITextView!
     
     var sensorsOn = false
     var mapID = defaultMapID
@@ -45,10 +48,53 @@ class SensorsViewController: UIViewController {
     
     
     /* sensors control */
+    @IBAction func sensorsButtonTouched(sender: UIButton) {
+        if !sensorsOn {
+            NSLog("Start Sensors", self)
+            sensorsOn = !sensorsOn
+            mapTextField.enabled = false
+            poseTextField.enabled = false
+            traceTextField.enabled = false
+            startButton.setTitle("STOP", forState: .Normal)
+            setStatusText(statusTextView, s: "Status: Starting...")
+            
+            //start sensors
+            startSensors()
+        }
+        else{
+            NSLog("Stop Sensors", self)
+            sensorsOn = !sensorsOn
+            mapTextField.enabled = true
+            poseTextField.enabled = true
+            traceTextField.enabled = true
+            startButton.setTitle("START", forState: .Normal)
+            
+            traceID += 1
+            traceTextField.text = String(traceID)
+            
+            //stop sensors
+            timer.invalidate()
+            dataFileHandle.closeFile()
+            motionManager.stopGyroUpdates()
+            motionManager.stopDeviceMotionUpdates()
+            motionManager.stopMagnetometerUpdates()
+            
+            setStatusText(statusTextView, s: "Status: STOP")
+        }
+    }
+    
     func startSensors(){
         //initialize sensors
         setStatusText(statusTextView, s: "Status: Initializing...")
         
+        if motionManager.accelerometerAvailable{
+            NSLog("Accelerometer Available", self)
+            motionManager.accelerometerUpdateInterval = dataUpdateInterval
+            motionManager.startAccelerometerUpdates()
+        }
+        else{
+            NSLog("Accelerometer Unavailable", self)
+        }
         if motionManager.deviceMotionAvailable{
             NSLog("DeviceMotion Available", self)
             motionManager.deviceMotionUpdateInterval = dataUpdateInterval
@@ -123,41 +169,72 @@ class SensorsViewController: UIViewController {
         let time = Double(t_time)
         
         var dataItem = "\(time)"
+        var display1, display2, display3: String
         
-        if let t = motionManager.deviceMotion?.userAcceleration.x {
+        if let t = motionManager.accelerometerData?.acceleration.x {
             dataItem = dataItem + " " + String(t)
+            display1 = "AccelerometerData: " + (NSString(format: "%.4f", t) as String)
         } else {
             dataItem = dataItem + " 0.000"
+            display1 = "AccelerometerData: " + "0.000"
         }
         
-        if let t = motionManager.deviceMotion?.userAcceleration.y {
+        if let t = motionManager.accelerometerData?.acceleration.y {
             dataItem = dataItem + " " + String(t)
+            display1 = display1 + " " + (NSString(format: "%.4f", t) as String)
         } else {
             dataItem = dataItem + " 0.000"
+            display1 += " 0.000"
         }
         
-        if let t = motionManager.deviceMotion?.userAcceleration.z {
+        if let t = motionManager.accelerometerData?.acceleration.z {
             dataItem = dataItem + " " + String(t)
+            display1 = display1 + " " + (NSString(format: "%.4f", t) as String)
         } else {
             dataItem = dataItem + " 0.000"
+            display1 += " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.userAcceleration.x{
+            display2 = "UserAcceleration: " + (NSString(format: "%.4f", t) as String)
+        } else {
+            display2 = "UserAcceleration: " + "0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.userAcceleration.y{
+            display2 = display2 + " " + (NSString(format: "%.4f", t) as String)
+        } else {
+            display2 += " 0.000"
+        }
+        
+        if let t = motionManager.deviceMotion?.userAcceleration.z{
+            display2 = display2 + " " + (NSString(format: "%.4f", t) as String)
+        } else {
+            display2 += " 0.000"
         }
         
         if let t = motionManager.deviceMotion?.gravity.x {
             dataItem = dataItem + " " + String(t)
+            display3 = "Gravity: " + (NSString(format: "%.4f", t) as String)
         } else {
             dataItem = dataItem + " 0.000"
+            display3 = "Gravity: " + "0.000"
         }
         
         if let t = motionManager.deviceMotion?.gravity.y {
             dataItem = dataItem + " " + String(t)
+            display3 = display3 + " " + (NSString(format: "%.4f", t) as String)
         } else {
             dataItem = dataItem + " 0.000"
+            display3 += " 0.000"
         }
         
         if let t = motionManager.deviceMotion?.gravity.z {
             dataItem = dataItem + " " + String(t)
+            display3 = display3 + " " + (NSString(format: "%.4f", t) as String)
         } else {
             dataItem = dataItem + " 0.000"
+            display3 += " 0.000"
         }
         
         if let t = motionManager.deviceMotion?.attitude.roll {
@@ -219,7 +296,7 @@ class SensorsViewController: UIViewController {
         //write data into files
         dataFileHandle.writeData(dataItem.dataUsingEncoding(NSUTF8StringEncoding)!)
         
-        //representation control
+        //display control
         refreshCount += 1
         if refreshCount == refreshTime{
             NSLog(dataItem, self)
@@ -231,43 +308,11 @@ class SensorsViewController: UIViewController {
                 setStatusText(statusTextView, s: t)
             }
             //TODO: display
+            setDisplayText(displayTextView1, s: display1)
+            setDisplayText(displayTextView2, s: display2)
+            setDisplayText(displayTextView3, s: display3)
         }
         refreshCount %= refreshTime
-    }
-    
-    @IBAction func sensorsButtonTouched(sender: UIButton) {
-        if !sensorsOn {
-            NSLog("Start Sensors", self)
-            sensorsOn = !sensorsOn
-            mapTextField.enabled = false
-            poseTextField.enabled = false
-            traceTextField.enabled = false
-            startButton.setTitle("STOP", forState: .Normal)
-            setStatusText(statusTextView, s: "Status: Starting...")
-            
-            //start sensors
-            startSensors()
-        }
-        else{
-            NSLog("Stop Sensors", self)
-            sensorsOn = !sensorsOn
-            mapTextField.enabled = true
-            poseTextField.enabled = true
-            traceTextField.enabled = true
-            startButton.setTitle("START", forState: .Normal)
-            
-            traceID += 1
-            traceTextField.text = String(traceID)
-            
-            //stop sensors
-            timer.invalidate()
-            dataFileHandle.closeFile()
-            motionManager.stopGyroUpdates()
-            motionManager.stopDeviceMotionUpdates()
-            motionManager.stopMagnetometerUpdates()
-            
-            setStatusText(statusTextView, s: "Status: STOP")
-        }
     }
     //////////////
 

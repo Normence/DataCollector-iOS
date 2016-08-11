@@ -203,11 +203,35 @@
                                 <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="AccelerometerData:" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Z3b-fG-8Jj">
+                                <rect key="frame" x="20" y="64" width="335" height="25"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" red="0.43529411759999997" green="0.4431372549" blue="0.47450980390000003" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="UserAcceleration: " selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yfZ-hr-JqQ">
+                                <rect key="frame" x="20" y="83" width="335" height="25"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" red="0.43529411759999997" green="0.4431372549" blue="0.47450980390000003" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" editable="NO" text="Gravity: " selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OXl-Wu-2Hw">
+                                <rect key="frame" x="20" y="102" width="335" height="25"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" red="0.43529411759999997" green="0.4431372549" blue="0.47450980390000003" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="10"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <navigationItem key="navigationItem" title="Sensors" id="yZw-g2-2l6"/>
                     <connections>
+                        <outlet property="displayTextView1" destination="Z3b-fG-8Jj" id="sBl-nC-UaA"/>
+                        <outlet property="displayTextView2" destination="yfZ-hr-JqQ" id="WpN-sF-upu"/>
+                        <outlet property="displayTextView3" destination="OXl-Wu-2Hw" id="vhz-lv-9ze"/>
                         <outlet property="mapTextField" destination="Qu3-a9-2cq" id="Ul1-ev-qHf"/>
                         <outlet property="poseTextField" destination="6zf-yy-yIr" id="1DI-xx-Mle"/>
                         <outlet property="startButton" destination="zxm-DV-8vi" id="IY5-hI-xGX"/>

@@ -20,7 +20,9 @@ class RecognizerViewController: UIViewController {
     var mapID = defaultMapID
     var poseID = defaultPoseID
     var traceID = defaultTraceID
+    var fileManager = NSFileManager.init()
     var dataFileHandle = NSFileHandle.init()
+    var outputFileHandle = NSFileHandle.init()
     var datas: [String]?
     var dataLen = 0
     var dataCount = 1
@@ -64,6 +66,7 @@ class RecognizerViewController: UIViewController {
             
             //stop recognizer
             dataFileHandle.closeFile()
+            outputFileHandle.closeFile()
             if timer.valid {
                 timer.invalidate()
             }
@@ -81,12 +84,24 @@ class RecognizerViewController: UIViewController {
         let documentDirectory = paths[0]
         
         let dataPath = documentDirectory.stringByAppendingString("/parking\(mapID)pose\(poseID)trace\(traceID).txt")
+        let outputPath = documentDirectory.stringByAppendingString("/parking\(mapID)pose\(poseID)trace\(traceID)(Output).txt")
+        
+        fileManager.createFileAtPath(outputPath, contents: nil, attributes: nil)
         
         if let d = NSFileHandle.init(forReadingAtPath: dataPath) {
             dataFileHandle = d
             NSLog("Reading file: " + dataPath, self)
         } else {
             NSLog("Fail to open file: " + dataPath, self)
+            setStatusText(statusTextView, s: "Status: File not found")
+            return
+        }
+        
+        if let d = NSFileHandle.init(forWritingAtPath: outputPath){
+            outputFileHandle = d
+            NSLog("Writing file: " + outputPath, self)
+        } else {
+            NSLog("Fail to open file: " + outputPath, self)
             setStatusText(statusTextView, s: "Status: File not found")
             return
         }
@@ -106,15 +121,21 @@ class RecognizerViewController: UIViewController {
         if dataCount < dataLen {
             let sd = calculateSD(datas, begin: dataCount, end: dataCount + 49)  //50Hz sampling frequency with 50 samples per second
             
+            var outputString = ""
             if sd.x <= 0.01 && sd.y <= 0.01 && sd.z <= 0.01 {
                 //idle
                 recognitionTextView.text = "IDLE"
                 NSLog("Motion Recognized as IDLE with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
+                outputString = "IDLE"
             } else {
                 //walking or moving
                 recognitionTextView.text = "WALKING"
                 NSLog("Motion Recognized as WALKING with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
+                outputString = "WALKING"
             }
+            outputString += ", index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z)\n"
+            outputFileHandle.writeData(outputString.dataUsingEncoding(NSUTF8StringEncoding)!)
+            
             dataCount += 1
         } else{
             //finish
@@ -126,11 +147,11 @@ class RecognizerViewController: UIViewController {
         }
     }
     
-    struct SD {  //Standard Deviation
+    struct threeAxisData {
         var x, y, z: Double
     }
     
-    func calculateSD(datas: [String]?, begin: Int, end: Int) -> SD {
+    func calculateSD(datas: [String]?, begin: Int, end: Int) -> threeAxisData {
         var stop: Int
         
         if end > ((datas?.count)! - 1) {
@@ -141,40 +162,20 @@ class RecognizerViewController: UIViewController {
         
         let nums = (stop - begin + 1)
         
-        var sum_x = 0.00
-        var sum_y = 0.00
-        var sum_z = 0.00
         var avg_x = 0.00
         var avg_y = 0.00
         var avg_z = 0.00
         
-        //get sum
-        for i in begin...stop {
-            if !datas![i].isEmpty {
-                let temp_data = datas![i].componentsSeparatedByString(" ")
-                if temp_data.count == dataItemNumber {
-                    if let ax = Double(temp_data[1]){
-                        sum_x += ax
-                    }
-                    if let ay = Double(temp_data[2]){
-                        sum_y += ay
-                    }
-                    if let az = Double(temp_data[3]){
-                        sum_z += az
-                    }
-                }
-            }
-        }
-        
         //get mean
-        avg_x = sum_x / Double(nums)
-        avg_y = sum_y / Double(nums)
-        avg_z = sum_z / Double(nums)
+        let avg = calculateAvg(datas, begin: begin, end: end)
+        avg_x = avg.x
+        avg_y = avg.y
+        avg_z = avg.z
         
         //get Standard Deviation
-        sum_x = 0.00
-        sum_y = 0.00
-        sum_z = 0.00
+        var sum_x = 0.00
+        var sum_y = 0.00
+        var sum_z = 0.00
         for i in begin...stop {
             if !datas![i].isEmpty{
                 let temp_data = datas![i].componentsSeparatedByString(" ")
@@ -196,16 +197,50 @@ class RecognizerViewController: UIViewController {
         avg_y = sum_y / Double(nums)
         avg_z = sum_z / Double(nums)
         
-        var sd: SD = SD.init(x: 0, y: 0, z: 0)
-        sd.x = sqrt(avg_x)
-        sd.y = sqrt(avg_y)
-        sd.z = sqrt(avg_z)
+        let sd = threeAxisData.init(x: sqrt(avg_x), y: sqrt(avg_y), z: sqrt(avg_z))
         
         return sd
     }
     
     func square(x: Double) -> Double {
         return x * x
+    }
+    
+    func calculateAvg(datas: [String]?, begin: Int, end: Int) -> threeAxisData {
+        var stop: Int
+        
+        if end > ((datas?.count)! - 1) {
+            stop = (datas?.count)! - 1
+        } else {
+            stop = end
+        }
+        
+        let nums = (stop - begin + 1)
+        
+        var sum_x = 0.00
+        var sum_y = 0.00
+        var sum_z = 0.00
+        
+        //get sum
+        for i in begin...stop {
+            if !datas![i].isEmpty {
+                let temp_data = datas![i].componentsSeparatedByString(" ")
+                if temp_data.count == dataItemNumber {
+                    if let ax = Double(temp_data[1]){
+                        sum_x += ax
+                    }
+                    if let ay = Double(temp_data[2]){
+                        sum_y += ay
+                    }
+                    if let az = Double(temp_data[3]){
+                        sum_z += az
+                    }
+                }
+            }
+        }
+        
+        let avg = threeAxisData.init(x: sum_x / Double(nums), y: sum_y / Double(nums), z: sum_z / Double(nums))
+        return avg
     }
     /////////////////
     
