@@ -56,7 +56,7 @@ class SensorsViewController: UIViewController {
             poseTextField.enabled = false
             traceTextField.enabled = false
             startButton.setTitle("STOP", forState: .Normal)
-            setStatusText(statusTextView, s: "Status: Starting...")
+            statusTextView.text = "Status: Starting..."
             
             //start sensors
             startSensors()
@@ -79,13 +79,13 @@ class SensorsViewController: UIViewController {
             motionManager.stopDeviceMotionUpdates()
             motionManager.stopMagnetometerUpdates()
             
-            setStatusText(statusTextView, s: "Status: STOP")
+            statusTextView.text = "Status: STOP"
         }
     }
     
     func startSensors(){
         //initialize sensors
-        setStatusText(statusTextView, s: "Status: Initializing...")
+        statusTextView.text = "Status: Initializing..."
         
         if motionManager.accelerometerAvailable{
             NSLog("Accelerometer Available", self)
@@ -157,7 +157,7 @@ class SensorsViewController: UIViewController {
         let dataHead = "TimeStamp" + " accX accY accZ" + " gX gY gZ" + " a.roll a.pitch a.yaw" + " rateX rateY rateZ" + " h.true h.magn h.accu" + " fieldX fieldY fieldZ\n"
         dataFileHandle.writeData(dataHead.dataUsingEncoding(NSUTF8StringEncoding)!)
         
-        setStatusText(statusTextView, s: "Status: Collecting.")
+        statusTextView.text = "Status: Collecting."
         timer = NSTimer.scheduledTimerWithTimeInterval(dataUpdateInterval, target: self, selector: #selector(getSensorsData(_:)), userInfo: nil, repeats: true)
     }
     
@@ -292,6 +292,9 @@ class SensorsViewController: UIViewController {
         }
         
         dataItem += "\n"
+        display1.appendContentsOf("  (g)")
+        display2.appendContentsOf("  (g)")
+        display3.appendContentsOf("  (g)")
         
         //write data into files
         dataFileHandle.writeData(dataItem.dataUsingEncoding(NSUTF8StringEncoding)!)
@@ -301,16 +304,16 @@ class SensorsViewController: UIViewController {
         if refreshCount == refreshTime{
             NSLog(dataItem, self)
             if let t = statusTextView.text where t.hasSuffix("..."){
-                setStatusText(statusTextView, s: "Status: Collecting.")
+                statusTextView.text = "Status: Collecting."
             }
             else{
                 let t = statusTextView.text + "."
-                setStatusText(statusTextView, s: t)
+                statusTextView.text = t
             }
             //TODO: display
-            setDisplayText(displayTextView1, s: display1)
-            setDisplayText(displayTextView2, s: display2)
-            setDisplayText(displayTextView3, s: display3)
+            displayTextView1.text = display1
+            displayTextView2.text = display2
+            displayTextView3.text = display3
         }
         refreshCount %= refreshTime
     }

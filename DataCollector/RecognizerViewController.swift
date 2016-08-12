@@ -23,12 +23,21 @@ class RecognizerViewController: UIViewController {
     var fileManager = NSFileManager.init()
     var dataFileHandle = NSFileHandle.init()
     var outputFileHandle = NSFileHandle.init()
-    var datas: [String]?
+    var datas: [[String]?]? = []
     var dataLen = 0
     var dataCount = 1
     var timer = NSTimer.init()
     var τMax = defaultMaxτ
     var τMin = defaultMinτ
+    
+    struct threeAxisData {
+        var x, y, z: Double
+    }
+    
+    enum motionStatus: Int {
+        case MOVING = -1
+        case IDLE, WALKING
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,7 +62,7 @@ class RecognizerViewController: UIViewController {
             poseTextField.enabled = false
             traceTextField.enabled = false
             startButton.setTitle("STOP", forState: .Normal)
-            setStatusText(statusTextView, s: "Status: Starting...")
+            statusTextView.text = "Status: Starting..."
             
             //start recognizer
             startRecognizer()
@@ -73,13 +82,13 @@ class RecognizerViewController: UIViewController {
                 timer.invalidate()
             }
             
-            setStatusText(statusTextView, s: "Status: STOP")
+            statusTextView.text = "Status: STOP"
             recognitionTextView.text = "STATUS"
         }
     }
     
     func startRecognizer() {
-        setStatusText(statusTextView, s: "Status: Initializing...")
+        statusTextView.text = "Status: Initializing..."
         
         //locate file
         let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
@@ -95,7 +104,7 @@ class RecognizerViewController: UIViewController {
             NSLog("Reading file: " + dataPath, self)
         } else {
             NSLog("Fail to open file: " + dataPath, self)
-            setStatusText(statusTextView, s: "Status: File not found")
+            statusTextView.text = "Status: File not found"
             return
         }
         
@@ -104,15 +113,19 @@ class RecognizerViewController: UIViewController {
             NSLog("Writing file: " + outputPath, self)
         } else {
             NSLog("Fail to open file: " + outputPath, self)
-            setStatusText(statusTextView, s: "Status: File not found")
+            statusTextView.text = "Status: File not found"
             return
         }
         
         //read data
-        setStatusText(statusTextView, s: "Status: Recognizing...")
+        statusTextView.text = "Status: Recognizing..."
         let data = dataFileHandle.readDataToEndOfFile()
         let temp_data = String.init(data: data, encoding: NSUTF8StringEncoding)
-        datas = temp_data?.componentsSeparatedByString("\n")
+        let temp_datas = temp_data?.componentsSeparatedByString("\n")
+        for i in 0..<(temp_datas?.count)! {
+            let temp_datas_i = temp_datas![i].componentsSeparatedByString(" ")
+            datas?.insert(temp_datas_i, atIndex: i)
+        }
         dataLen = (datas?.count)!
         dataCount = 1
         
@@ -128,11 +141,12 @@ class RecognizerViewController: UIViewController {
                 //idle
                 recognitionTextView.text = "IDLE"
                 NSLog("Motion Recognized as IDLE with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
-                outputString = "IDLE"
+                outputString = "Status: 0, index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z)\n"
                 τMax = defaultMaxτ
                 τMin = defaultMinτ
             } else {
                 //walking or moving
+                //get the maximum Normalized Auto-Correlation and the corresponding τ
                 var nacMax = 0.00
                 var nacMax_τ = 0
                 for τ in τMin...τMax {
@@ -141,45 +155,47 @@ class RecognizerViewController: UIViewController {
                     if t > nacMax {
                         nacMax = t
                         nacMax_τ = τ
-                        τMax = τ + 10
-                        τMin = τ - 10
+                        if τ <= 100 && τ >= 40 {
+                            τMax = τ + 10
+                            τMin = τ - 10
+                        } else {
+                            τMax = defaultMaxτ
+                            τMin = defaultMinτ
+                        }
                     }
                 }
                 
                 if nacMax > 0.7 {
                     //WALKING
                     recognitionTextView.text = "WALKING"
-                    NSLog("Motion Recognized as WALKING with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
+                    NSLog("Motion Recognized as WALKING with sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)", self)
+                    outputString = "Status: 1, index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)\n"
+                } else {
+                    //MOVING
+                    recognitionTextView.text = "MOVING"
+                    NSLog("Motion Recognized as MOVING with sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)", self)
+                    outputString = "Status: -1, index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)\n"
                 }
                 
-                
-                //walking or moving
-                
-                outputString = "WALKING"
             }
-            outputString += ", index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z)\n"
             outputFileHandle.writeData(outputString.dataUsingEncoding(NSUTF8StringEncoding)!)
             
             dataCount += 1
         } else{
             //finish
             NSLog("Finish", self)
-            setStatusText(statusTextView, s: "Status: Finish")
+            statusTextView.text = "Status: Finish"
             if timer.valid {
                 timer.invalidate()
             }
         }
     }
     
-    struct threeAxisData {
-        var x, y, z: Double
-    }
-    
-    func calculateSD(datas: [String]?, begin: Int, end: Int) -> threeAxisData {
+    func calculateSD(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {
         var stop: Int
         
-        if end > ((datas?.count)! - 1) {
-            stop = (datas?.count)! - 1
+        if end > (dataLen - 1) {
+            stop = (dataLen - 1)
         } else {
             stop = end
         }
@@ -201,18 +217,11 @@ class RecognizerViewController: UIViewController {
         var sum_y = 0.00
         var sum_z = 0.00
         for i in begin...stop {
-            if !datas![i].isEmpty{
-                let temp_data = datas![i].componentsSeparatedByString(" ")
-                if temp_data.count == dataItemNumber {
-                    if let ax = Double(temp_data[1]){
-                        sum_x += square(ax - avg_x)
-                    }
-                    if let ay = Double(temp_data[2]){
-                        sum_y += square(ay - avg_y)
-                    }
-                    if let az = Double(temp_data[3]){
-                        sum_z += square(az - avg_z)
-                    }
+            if !datas![i]!.isEmpty{
+                if datas![i]!.count == dataItemNumber {
+                    sum_x += square(Double(datas![i]![1])! - avg_x)
+                    sum_y += square(Double(datas![i]![2])! - avg_y)
+                    sum_z += square(Double(datas![i]![3])! - avg_z)
                 }
             }
         }
@@ -230,11 +239,11 @@ class RecognizerViewController: UIViewController {
         return x * x
     }
     
-    func calculateAvg(datas: [String]?, begin: Int, end: Int) -> threeAxisData {
+    func calculateAvg(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {
         var stop: Int
         
-        if end > ((datas?.count)! - 1) {
-            stop = (datas?.count)! - 1
+        if end > (dataLen - 1) {
+            stop = dataLen - 1
         } else {
             stop = end
         }
@@ -247,18 +256,11 @@ class RecognizerViewController: UIViewController {
         
         //get sum
         for i in begin...stop {
-            if !datas![i].isEmpty {
-                let temp_data = datas![i].componentsSeparatedByString(" ")
-                if temp_data.count == dataItemNumber {
-                    if let ax = Double(temp_data[1]){
-                        sum_x += ax
-                    }
-                    if let ay = Double(temp_data[2]){
-                        sum_y += ay
-                    }
-                    if let az = Double(temp_data[3]){
-                        sum_z += az
-                    }
+            if !datas![i]!.isEmpty {
+                if datas![i]!.count == dataItemNumber {
+                    sum_x += Double(datas![i]![1])!
+                    sum_y += Double(datas![i]![2])!
+                    sum_z += Double(datas![i]![3])!
                 }
             }
         }
@@ -267,7 +269,7 @@ class RecognizerViewController: UIViewController {
         return avg
     }
     
-    func calculateNAC(datas: [String]?, begin: Int, end: Int) -> threeAxisData {  //{∑<k=0...k=τ-1> [(a(m+k]-μ(m,τ))·(a(m+k+τ)-μ(m+τ,τ))]}/τσ(m,τ)σ(m+τ,τ)
+    func calculateNAC(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {  //{∑<k=0...k=τ-1> [(a(m+k]-μ(m,τ))·(a(m+k+τ)-μ(m+τ,τ))]}/τσ(m,τ)σ(m+τ,τ)
         
         let τ = (end - begin + 1)
         let μ_m_τ = calculateAvg(datas, begin: begin, end: end)
@@ -296,18 +298,11 @@ class RecognizerViewController: UIViewController {
             var temp2_z = 0.00
             
             if i < dataLen{
-                if !datas![i].isEmpty {
-                    let temp_data = datas![i].componentsSeparatedByString(" ")
-                    if temp_data.count == dataItemNumber {
-                        if let ax = Double(temp_data[1]){
-                            temp1_x += ax - μ_m_τ.x
-                        }
-                        if let ay = Double(temp_data[2]){
-                            temp1_y += ay - μ_m_τ.y
-                        }
-                        if let az = Double(temp_data[3]){
-                            temp1_z += az - μ_m_τ.z
-                        }
+                if !datas![i]!.isEmpty {
+                    if datas![i]!.count == dataItemNumber {
+                        temp1_x += Double(datas![i]![1])! - μ_m_τ.x
+                        temp1_y += Double(datas![i]![2])! - μ_m_τ.y
+                        temp1_z += Double(datas![i]![3])! - μ_m_τ.z
                     }
                 }
             } else {
@@ -317,18 +312,11 @@ class RecognizerViewController: UIViewController {
             }
             
             if (i + τ) < dataLen{
-                if !datas![i+τ].isEmpty {
-                    let temp_data = datas![i+τ].componentsSeparatedByString(" ")
-                    if temp_data.count == dataItemNumber {
-                        if let ax = Double(temp_data[1]){
-                            temp2_x += ax - μ_m＋τ_τ.x
-                        }
-                        if let ay = Double(temp_data[2]){
-                            temp2_y += ay - μ_m＋τ_τ.y
-                        }
-                        if let az = Double(temp_data[3]){
-                            temp2_z += az - μ_m＋τ_τ.z
-                        }
+                if !datas![i+τ]!.isEmpty {
+                    if datas![i+τ]!.count == dataItemNumber {
+                        temp2_x += Double(datas![i+τ]![1])! - μ_m＋τ_τ.x
+                        temp2_y += Double(datas![i+τ]![2])! - μ_m＋τ_τ.y
+                        temp2_z += Double(datas![i+τ]![3])! - μ_m＋τ_τ.z
                     }
                 }
             } else {

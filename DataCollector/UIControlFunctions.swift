@@ -9,16 +9,3 @@
 import Foundation
 import UIKit
 
-func setStatusText(textView: UITextView, s: String){
-    textView.text = s
-    textView.textColor = UIColor.grayColor()
-    textView.font = UIFont.systemFontOfSize(10)
-    textView.textAlignment = NSTextAlignment.Center
-}
-
-func setDisplayText(textView: UITextView, s: String){
-    textView.text = s
-    textView.textColor = UIColor.grayColor()
-    textView.font = UIFont.systemFontOfSize(10)
-    textView.textAlignment = NSTextAlignment.Left
-}
