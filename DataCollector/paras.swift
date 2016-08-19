@@ -13,11 +13,10 @@ let defaultMapID = 5
 let defaultPoseID = 1
 let defaultTraceID = 1
 
-let refreshTime = 50   
-var refreshCount = 0   //update UI and Log per refreshTime
-let dataUpdateInterval = 1.0/50.0
-let dataItemNumber = 16
+let dataUpdateInterval = 1.0 / 50.0
+let refreshTime = Int(1.0 / dataUpdateInterval)
 
+let dataItemNumber = 16
 let defaultMinτ = 40
 let defaultMaxτ = 100
 /////

@@ -31,6 +31,7 @@ class SensorsViewController: UIViewController {
     var fileManager = NSFileManager.defaultManager()
     var dataFileHandle = NSFileHandle.init()
     var timer = NSTimer.init()
+    var refreshCount = 0   //update UI and Log per refreshTime
 
     
     override func viewDidLoad() {
@@ -88,7 +89,7 @@ class SensorsViewController: UIViewController {
         statusTextView.text = "Status: Initializing..."
         
         if motionManager.accelerometerAvailable{
-            NSLog("Accelerometer Available", self)
+            print("Accelerometer Available")
             motionManager.accelerometerUpdateInterval = dataUpdateInterval
             motionManager.startAccelerometerUpdates()
         }
@@ -96,7 +97,7 @@ class SensorsViewController: UIViewController {
             NSLog("Accelerometer Unavailable", self)
         }
         if motionManager.deviceMotionAvailable{
-            NSLog("DeviceMotion Available", self)
+            print("DeviceMotion Available")
             motionManager.deviceMotionUpdateInterval = dataUpdateInterval
             motionManager.startDeviceMotionUpdates()
         }
@@ -104,7 +105,7 @@ class SensorsViewController: UIViewController {
             NSLog("DeviceMotion Unavailable", self)
         }
         if motionManager.gyroAvailable{
-            NSLog("Gyro Available", self)
+            print("Gyro Available")
             motionManager.gyroUpdateInterval = dataUpdateInterval
             motionManager.startGyroUpdates()
         }
@@ -112,7 +113,7 @@ class SensorsViewController: UIViewController {
             NSLog("Gyro Unavailable", self)
         }
         if motionManager.magnetometerAvailable{
-            NSLog("Magnetometer Available", self)
+            print("Magnetometer Available")
             motionManager.magnetometerUpdateInterval = dataUpdateInterval
             motionManager.startMagnetometerUpdates()
         }
@@ -150,6 +151,16 @@ class SensorsViewController: UIViewController {
    
             //create data files
         let dataPath = documentsDirectory.stringByAppendingString("/parking\(mapID)pose\(poseID)trace\(traceID).txt")
+        
+        if fileManager.fileExistsAtPath(dataPath) {
+            do{
+                try fileManager.removeItemAtPath(dataPath)
+                print("Remove file: " + dataPath)
+            } catch _ as NSError {
+                NSLog("Unable to remove file: " + dataPath, self)
+            }
+        }
+        
         fileManager.createFileAtPath(dataPath, contents: nil, attributes: nil)
         dataFileHandle = NSFileHandle.init(forWritingAtPath: dataPath)!
         
@@ -302,7 +313,7 @@ class SensorsViewController: UIViewController {
         //display control
         refreshCount += 1
         if refreshCount == refreshTime{
-            NSLog(dataItem, self)
+            print(dataItem)
             if let t = statusTextView.text where t.hasSuffix("..."){
                 statusTextView.text = "Status: Collecting."
             }
@@ -360,13 +371,13 @@ class SensorsViewController: UIViewController {
     
     @IBAction func mapTextFieldEdited(sender: UITextField) {
         if((sender.text == nil)){
-            NSLog("No map value, MapID changes to \(defaultMapID)", self)
+            print("No map value, MapID changes to \(defaultMapID)")
             mapID = defaultMapID
             sender.text = String(mapID)
         }
         else{
             mapID = Int(sender.text!)!
-            NSLog("MapID changes to \(mapID)", self)
+            print("MapID changes to \(mapID)")
         }
         
         sender.resignFirstResponder()
@@ -375,13 +386,13 @@ class SensorsViewController: UIViewController {
     
     @IBAction func poseTextFieldEdited(sender: UITextField) {
         if((sender.text == nil)){
-            NSLog("No pose value, PoseID changes to \(defaultPoseID)", self)
+            print("No pose value, PoseID changes to \(defaultPoseID)")
             poseID = defaultPoseID
             sender.text = String(poseID)
         }
         else{
             poseID = Int(sender.text!)!
-            NSLog("PoseID changes to \(poseID)", self)
+            print("PoseID changes to \(poseID)")
         }
         
         sender.resignFirstResponder()
@@ -390,13 +401,13 @@ class SensorsViewController: UIViewController {
     
     @IBAction func traceTextFieldEdited(sender: UITextField) {
         if((sender.text == nil)){
-            NSLog("No trace value, TraceID changes to \(defaultTraceID)", self)
+            print("No trace value, TraceID changes to \(defaultTraceID)")
             traceID = defaultTraceID
             sender.text = String(traceID)
         }
         else{
             traceID = Int(sender.text!)!
-            NSLog("TraceID changes to \(traceID)", self)
+            print("TraceID changes to \(traceID)")
         }
         
         sender.resignFirstResponder()

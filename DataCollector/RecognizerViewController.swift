@@ -15,7 +15,16 @@ class RecognizerViewController: UIViewController {
     @IBOutlet var mapTextField: UITextField!
     @IBOutlet var poseTextField: UITextField!
     @IBOutlet var traceTextField: UITextField!
-
+    
+    struct threeAxisData {
+        var x, y, z: Double
+    }
+    
+    enum motionStatus: Int {
+        case MOVING = -1
+        case IDLE, WALKING
+    }
+    
     var recognizerOn = false
     var mapID = defaultMapID
     var poseID = defaultPoseID
@@ -26,18 +35,11 @@ class RecognizerViewController: UIViewController {
     var datas: [[String]?]? = []
     var dataLen = 0
     var dataCount = 1
+    var dataEnd = 0
     var timer = NSTimer.init()
     var τMax = defaultMaxτ
     var τMin = defaultMinτ
-    
-    struct threeAxisData {
-        var x, y, z: Double
-    }
-    
-    enum motionStatus: Int {
-        case MOVING = -1
-        case IDLE, WALKING
-    }
+    var status = motionStatus.IDLE
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -81,6 +83,7 @@ class RecognizerViewController: UIViewController {
             if timer.valid {
                 timer.invalidate()
             }
+            datas = []
             
             statusTextView.text = "Status: STOP"
             recognitionTextView.text = "STATUS"
@@ -97,11 +100,24 @@ class RecognizerViewController: UIViewController {
         let dataPath = documentDirectory.stringByAppendingString("/parking\(mapID)pose\(poseID)trace\(traceID).txt")
         let outputPath = documentDirectory.stringByAppendingString("/parking\(mapID)pose\(poseID)trace\(traceID)(Output).txt")
         
-        fileManager.createFileAtPath(outputPath, contents: nil, attributes: nil)
+        if fileManager.fileExistsAtPath(outputPath) {
+            do{
+                try fileManager.removeItemAtPath(outputPath)
+                print("Remove file: " + outputPath)
+            } catch _ as NSError {
+                NSLog("Unable to remove file: " + outputPath, self)
+            }
+        }
+        
+        if fileManager.createFileAtPath(outputPath, contents: nil, attributes: nil) {
+            print("Create file: " + outputPath)
+        } else {
+            print("Unable to create file: " + outputPath)
+        }
         
         if let d = NSFileHandle.init(forReadingAtPath: dataPath) {
             dataFileHandle = d
-            NSLog("Reading file: " + dataPath, self)
+            print("Reading file: " + dataPath)
         } else {
             NSLog("Fail to open file: " + dataPath, self)
             statusTextView.text = "Status: File not found"
@@ -110,7 +126,9 @@ class RecognizerViewController: UIViewController {
         
         if let d = NSFileHandle.init(forWritingAtPath: outputPath){
             outputFileHandle = d
-            NSLog("Writing file: " + outputPath, self)
+            print("Writing file: " + outputPath)
+            let s = "Status index s sd.x sd.y sd.z MaxNac τ nac.x nac.y nac.z\n"
+            outputFileHandle.writeData(s.dataUsingEncoding(NSUTF8StringEncoding)!)
         } else {
             NSLog("Fail to open file: " + outputPath, self)
             statusTextView.text = "Status: File not found"
@@ -122,26 +140,36 @@ class RecognizerViewController: UIViewController {
         let data = dataFileHandle.readDataToEndOfFile()
         let temp_data = String.init(data: data, encoding: NSUTF8StringEncoding)
         let temp_datas = temp_data?.componentsSeparatedByString("\n")
+        
         for i in 0..<(temp_datas?.count)! {
             let temp_datas_i = temp_datas![i].componentsSeparatedByString(" ")
             datas?.insert(temp_datas_i, atIndex: i)
         }
         dataLen = (datas?.count)!
         dataCount = 1
+        dataEnd = dataLen - defaultMaxτ
         
-        timer = NSTimer.scheduledTimerWithTimeInterval(dataUpdateInterval, target: self, selector: #selector(motionRecognition(_:)), userInfo: nil, repeats: true)
+        timer = NSTimer.scheduledTimerWithTimeInterval(dataUpdateInterval, target: self, selector: #selector(refreshUI(_:)), userInfo: nil, repeats: true)
+        
+        for _ in 1...dataEnd{
+            motionRecognition()
+        }
+        
     }
     
-    func motionRecognition(timer: NSTimer) {
-        if dataCount < dataLen {
-            let sd = calculateSD(datas, begin: dataCount, end: dataCount + 49)  //50Hz sampling frequency with 50 samples per second
+    func motionRecognition() {
+        if dataCount < dataEnd {
+            print("dataCount: \(dataCount), dataLen: \(dataLen)， dataEnd: \(dataEnd)")
+            
+            let sd = calculateSD(datas, begin: dataCount, end: dataCount + Int(1.0 / dataUpdateInterval) - 1)  //50Hz sampling frequency with 50 samples per second
             
             var outputString = ""
-            if sd.x <= 0.01 && sd.y <= 0.01 && sd.z <= 0.01 {
+            let s = sqrt(square(sd.x) + square(sd.y) + square(sd.z))
+            if sd.x < 0.01 && sd.y < 0.01 && sd.z < 0.01 {
                 //idle
-                recognitionTextView.text = "IDLE"
-                NSLog("Motion Recognized as IDLE with sd.x: \(sd.x) sd.y: \(sd.y) sd.z: \(sd.z)", self)
-                outputString = "Status: 0, index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z)\n"
+                status = .IDLE
+                print("Motion Recognized as IDLE with index: \(dataCount), s: \(s), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z)")
+                outputString = "0, \(dataCount), \(s), \(sd.x), \(sd.y), \(sd.z)\n"
                 τMax = defaultMaxτ
                 τMin = defaultMinτ
             } else {
@@ -149,32 +177,36 @@ class RecognizerViewController: UIViewController {
                 //get the maximum Normalized Auto-Correlation and the corresponding τ
                 var nacMax = 0.00
                 var nacMax_τ = 0
+                var tempNac = threeAxisData.init(x: 0, y: 0, z: 0)
                 for τ in τMin...τMax {
                     let nac = calculateNAC(datas, begin: dataCount, end: dataCount + τ - 1)
-                    let t = max(nac.x, y: nac.y, z: nac.z)
+                    let t = sqrt(square(nac.x) + square(nac.y) + square(nac.z))    // t ≤ 1
                     if t > nacMax {
                         nacMax = t
                         nacMax_τ = τ
-                        if τ <= 100 && τ >= 40 {
-                            τMax = τ + 10
-                            τMin = τ - 10
-                        } else {
-                            τMax = defaultMaxτ
-                            τMin = defaultMinτ
-                        }
+                        tempNac = nac
                     }
                 }
+                τMax = nacMax_τ + 10
+                τMin = nacMax_τ - 10
+                if τMin <= 0 {
+                    τMax = defaultMaxτ
+                    τMin = defaultMinτ
+                }
+                print("τmin: \(τMin), τmax: \(τMax)")
                 
-                if nacMax > 0.7 {
+                if tempNac.x >= 0.7 || tempNac.y >= 0.7 || tempNac.z >= 0.7 {
                     //WALKING
-                    recognitionTextView.text = "WALKING"
-                    NSLog("Motion Recognized as WALKING with sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)", self)
-                    outputString = "Status: 1, index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)\n"
+                    status = .WALKING
+                    print("Motion Recognized as WALKING with index: \(dataCount), s: \(s), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)")
+                    outputString = "1, \(dataCount), \(s), \(sd.x), \(sd.y), \(sd.z), \(nacMax), \(nacMax_τ), \(tempNac.x), \(tempNac.y), \(tempNac.z)\n"
                 } else {
                     //MOVING
-                    recognitionTextView.text = "MOVING"
-                    NSLog("Motion Recognized as MOVING with sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)", self)
-                    outputString = "Status: -1, index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)\n"
+                    status = .MOVING
+                    print("Motion Recognized as MOVING with index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)")
+                    outputString = "-1, \(dataCount), \(s), \(sd.x), \(sd.y), \(sd.z), \(nacMax), \(nacMax_τ), \(tempNac.x), \(tempNac.y), \(tempNac.z)\n"
+                    τMax = defaultMaxτ
+                    τMin = defaultMinτ
                 }
                 
             }
@@ -185,9 +217,6 @@ class RecognizerViewController: UIViewController {
             //finish
             NSLog("Finish", self)
             statusTextView.text = "Status: Finish"
-            if timer.valid {
-                timer.invalidate()
-            }
         }
     }
     
@@ -200,7 +229,7 @@ class RecognizerViewController: UIViewController {
             stop = end
         }
         
-        let nums = (stop - begin + 1)
+        let nums = (end - begin + 1)
         
         var avg_x = 0.00
         var avg_y = 0.00
@@ -216,13 +245,19 @@ class RecognizerViewController: UIViewController {
         var sum_x = 0.00
         var sum_y = 0.00
         var sum_z = 0.00
-        for i in begin...stop {
-            if !datas![i]!.isEmpty{
-                if datas![i]!.count == dataItemNumber {
-                    sum_x += square(Double(datas![i]![1])! - avg_x)
-                    sum_y += square(Double(datas![i]![2])! - avg_y)
-                    sum_z += square(Double(datas![i]![3])! - avg_z)
+        for i in begin...end {
+            if i < dataLen{
+                if !datas![i]!.isEmpty{
+                    if datas![i]!.count == dataItemNumber {
+                        sum_x += square(Double(datas![i]![1])! - avg_x)
+                        sum_y += square(Double(datas![i]![2])! - avg_y)
+                        sum_z += square(Double(datas![i]![3])! - avg_z)
+                    }
                 }
+            } else {
+                sum_x += square(0 - avg_x)
+                sum_y += square(0 - avg_y)
+                sum_z += square(0 - avg_z)
             }
         }
         
@@ -248,7 +283,7 @@ class RecognizerViewController: UIViewController {
             stop = end
         }
         
-        let nums = (stop - begin + 1)
+        let nums = (end - begin + 1)
         
         var sum_x = 0.00
         var sum_y = 0.00
@@ -256,11 +291,13 @@ class RecognizerViewController: UIViewController {
         
         //get sum
         for i in begin...stop {
-            if !datas![i]!.isEmpty {
-                if datas![i]!.count == dataItemNumber {
-                    sum_x += Double(datas![i]![1])!
-                    sum_y += Double(datas![i]![2])!
-                    sum_z += Double(datas![i]![3])!
+            if i < dataLen{
+                if !datas![i]!.isEmpty {
+                    if datas![i]!.count == dataItemNumber {
+                        sum_x += Double(datas![i]![1])!
+                        sum_y += Double(datas![i]![2])!
+                        sum_z += Double(datas![i]![3])!
+                    }
                 }
             }
         }
@@ -269,13 +306,14 @@ class RecognizerViewController: UIViewController {
         return avg
     }
     
-    func calculateNAC(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {  //{∑<k=0...k=τ-1> [(a(m+k]-μ(m,τ))·(a(m+k+τ)-μ(m+τ,τ))]}/τσ(m,τ)σ(m+τ,τ)
+    func calculateNAC(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {  //{∑<k=0...k=τ-1> [(a(m+k)-μ(m,τ))·(a(m+k+τ)-μ(m+τ,τ))]}/τσ(m,τ)σ(m+τ,τ)
         
         let τ = (end - begin + 1)
         let μ_m_τ = calculateAvg(datas, begin: begin, end: end)
         let σ_m_τ = calculateSD(datas, begin: begin, end: end)
         var μ_m＋τ_τ: threeAxisData
         var σ_m＋τ_τ: threeAxisData
+        
         if (begin + τ) >= dataLen {
             μ_m＋τ_τ = threeAxisData.init(x: 0, y: 0, z: 0)
             σ_m＋τ_τ = threeAxisData.init(x: 0, y: 0, z: 0)
@@ -373,6 +411,16 @@ class RecognizerViewController: UIViewController {
     }
     /////////////////
     
+    func refreshUI(timer: NSTimer) {
+        switch  status {
+        case .IDLE:
+            recognitionTextView.text = "IDLE"
+        case .MOVING:
+            recognitionTextView.text = "MOVING"
+        case .WALKING:
+            recognitionTextView.text = "WALKING"
+        }
+    }
     
     /* Map, Pose, Trace TextField Control */
     //上移视图，使键盘不至覆盖TextField
@@ -415,13 +463,13 @@ class RecognizerViewController: UIViewController {
     
     @IBAction func mapTextFieldEdited(sender: UITextField) {
         if((sender.text == nil)){
-            NSLog("No map value, MapID changes to \(defaultMapID)", self)
+            print("No map value, MapID changes to \(defaultMapID)")
             mapID = defaultMapID
             sender.text = String(mapID)
         }
         else{
             mapID = Int(sender.text!)!
-            NSLog("MapID changes to \(mapID)", self)
+            print("MapID changes to \(mapID)")
         }
         
         sender.resignFirstResponder()
@@ -430,13 +478,13 @@ class RecognizerViewController: UIViewController {
     
     @IBAction func poseTextFieldEdited(sender: UITextField) {
         if((sender.text == nil)){
-            NSLog("No pose value, PoseID changes to \(defaultPoseID)", self)
+            print("No pose value, PoseID changes to \(defaultPoseID)")
             poseID = defaultPoseID
             sender.text = String(poseID)
         }
         else{
             poseID = Int(sender.text!)!
-            NSLog("PoseID changes to \(poseID)", self)
+            print("PoseID changes to \(poseID)")
         }
         
         sender.resignFirstResponder()
@@ -445,13 +493,13 @@ class RecognizerViewController: UIViewController {
     
     @IBAction func traceTextFieldEdited(sender: UITextField) {
         if((sender.text == nil)){
-            NSLog("No trace value, TraceID changes to \(defaultTraceID)", self)
+            print("No trace value, TraceID changes to \(defaultTraceID)")
             traceID = defaultTraceID
             sender.text = String(traceID)
         }
         else{
             traceID = Int(sender.text!)!
-            NSLog("TraceID changes to \(traceID)", self)
+            print("TraceID changes to \(traceID)")
         }
         
         sender.resignFirstResponder()
