@@ -127,7 +127,7 @@ class RecognizerViewController: UIViewController {
         if let d = NSFileHandle.init(forWritingAtPath: outputPath){
             outputFileHandle = d
             print("Writing file: " + outputPath)
-            let s = "Status index s sd.x sd.y sd.z MaxNac τ nac.x nac.y nac.z\n"
+            let s = "Status index s MaxNac τ\n"
             outputFileHandle.writeData(s.dataUsingEncoding(NSUTF8StringEncoding)!)
         } else {
             NSLog("Fail to open file: " + outputPath, self)
@@ -164,12 +164,11 @@ class RecognizerViewController: UIViewController {
             let sd = calculateSD(datas, begin: dataCount, end: dataCount + Int(1.0 / dataUpdateInterval) - 1)  //50Hz sampling frequency with 50 samples per second
             
             var outputString = ""
-            let s = sqrt(square(sd.x) + square(sd.y) + square(sd.z))
-            if sd.x < 0.01 && sd.y < 0.01 && sd.z < 0.01 {
+            if sd < 0.01 {
                 //idle
                 status = .IDLE
-                print("Motion Recognized as IDLE with index: \(dataCount), s: \(s), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z)")
-                outputString = "0, \(dataCount), \(s), \(sd.x), \(sd.y), \(sd.z)\n"
+                print("Motion Recognized as IDLE with index: \(dataCount), sd: \(sd)")
+                outputString = "0, \(dataCount), \(sd)n"
                 τMax = defaultMaxτ
                 τMin = defaultMinτ
             } else {
@@ -177,14 +176,11 @@ class RecognizerViewController: UIViewController {
                 //get the maximum Normalized Auto-Correlation and the corresponding τ
                 var nacMax = 0.00
                 var nacMax_τ = 0
-                var tempNac = threeAxisData.init(x: 0, y: 0, z: 0)
                 for τ in τMin...τMax {
                     let nac = calculateNAC(datas, begin: dataCount, end: dataCount + τ - 1)
-                    let t = sqrt(square(nac.x) + square(nac.y) + square(nac.z))    // t ≤ 1
-                    if t > nacMax {
-                        nacMax = t
+                    if nac > nacMax {
+                        nacMax = nac
                         nacMax_τ = τ
-                        tempNac = nac
                     }
                 }
                 τMax = nacMax_τ + 10
@@ -195,16 +191,16 @@ class RecognizerViewController: UIViewController {
                 }
                 print("τmin: \(τMin), τmax: \(τMax)")
                 
-                if tempNac.x >= 0.7 || tempNac.y >= 0.7 || tempNac.z >= 0.7 {
+                if nacMax > 0.7 {
                     //WALKING
                     status = .WALKING
-                    print("Motion Recognized as WALKING with index: \(dataCount), s: \(s), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)")
-                    outputString = "1, \(dataCount), \(s), \(sd.x), \(sd.y), \(sd.z), \(nacMax), \(nacMax_τ), \(tempNac.x), \(tempNac.y), \(tempNac.z)\n"
+                    print("Motion Recognized as WALKING with index: \(dataCount), sd: \(sd), MAXNac: \(nacMax), τ: \(nacMax_τ)")
+                    outputString = "1, \(dataCount), \(sd), \(nacMax), \(nacMax_τ)\n"
                 } else {
                     //MOVING
                     status = .MOVING
-                    print("Motion Recognized as MOVING with index: \(dataCount), sd.x: \(sd.x), sd.y: \(sd.y), sd.z: \(sd.z), MAXNac: \(nacMax), τ: \(nacMax_τ)")
-                    outputString = "-1, \(dataCount), \(s), \(sd.x), \(sd.y), \(sd.z), \(nacMax), \(nacMax_τ), \(tempNac.x), \(tempNac.y), \(tempNac.z)\n"
+                    print("Motion Recognized as MOVING with index: \(dataCount), sd: \(sd), MAXNac: \(nacMax), τ: \(nacMax_τ)")
+                    outputString = "-1, \(dataCount), \(sd), \(nacMax), \(nacMax_τ)\n"
                     τMax = defaultMaxτ
                     τMin = defaultMinτ
                 }
@@ -220,7 +216,7 @@ class RecognizerViewController: UIViewController {
         }
     }
     
-    func calculateSD(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {
+    func calculateSD(datas: [[String]?]?, begin: Int, end: Int) -> Double {
         var stop: Int
         
         if end > (dataLen - 1) {
@@ -231,50 +227,36 @@ class RecognizerViewController: UIViewController {
         
         let nums = (end - begin + 1)
         
-        var avg_x = 0.00
-        var avg_y = 0.00
-        var avg_z = 0.00
+        var avg = 0.00
         
         //get mean
-        let avg = calculateAvg(datas, begin: begin, end: end)
-        avg_x = avg.x
-        avg_y = avg.y
-        avg_z = avg.z
+        avg = calculateAvg(datas, begin: begin, end: end)
         
         //get Standard Deviation
-        var sum_x = 0.00
-        var sum_y = 0.00
-        var sum_z = 0.00
+        var sum = 0.00
         for i in begin...end {
             if i < dataLen{
                 if !datas![i]!.isEmpty{
                     if datas![i]!.count == dataItemNumber {
-                        sum_x += square(Double(datas![i]![1])! - avg_x)
-                        sum_y += square(Double(datas![i]![2])! - avg_y)
-                        sum_z += square(Double(datas![i]![3])! - avg_z)
+                        let norm = sqrt(square(Double(datas![i]![1])!) + square(Double(datas![i]![2])!) + square(Double(datas![i]![3])!))
+                        sum += square(norm - avg)
                     }
                 }
             } else {
-                sum_x += square(0 - avg_x)
-                sum_y += square(0 - avg_y)
-                sum_z += square(0 - avg_z)
+                sum += square(0 - avg)
             }
         }
         
-        avg_x = sum_x / Double(nums)
-        avg_y = sum_y / Double(nums)
-        avg_z = sum_z / Double(nums)
+        avg = sum / Double(nums)
         
-        let sd = threeAxisData.init(x: sqrt(avg_x), y: sqrt(avg_y), z: sqrt(avg_z))
-        
-        return sd
+        return sqrt(avg)
     }
     
     func square(x: Double) -> Double {
         return x * x
     }
     
-    func calculateAvg(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {
+    func calculateAvg(datas: [[String]?]?, begin: Int, end: Int) -> Double {
         var stop: Int
         
         if end > (dataLen - 1) {
@@ -285,111 +267,79 @@ class RecognizerViewController: UIViewController {
         
         let nums = (end - begin + 1)
         
-        var sum_x = 0.00
-        var sum_y = 0.00
-        var sum_z = 0.00
+        var sum = 0.00
         
         //get sum
         for i in begin...stop {
             if i < dataLen{
                 if !datas![i]!.isEmpty {
                     if datas![i]!.count == dataItemNumber {
-                        sum_x += Double(datas![i]![1])!
-                        sum_y += Double(datas![i]![2])!
-                        sum_z += Double(datas![i]![3])!
+                        sum += sqrt(square(Double(datas![i]![1])!) + square(Double(datas![i]![2])!) + square(Double(datas![i]![3])!))
                     }
                 }
             }
         }
         
-        let avg = threeAxisData.init(x: sum_x / Double(nums), y: sum_y / Double(nums), z: sum_z / Double(nums))
+        let avg = sum / Double(nums)
         return avg
     }
     
-    func calculateNAC(datas: [[String]?]?, begin: Int, end: Int) -> threeAxisData {  //{∑<k=0...k=τ-1> [(a(m+k)-μ(m,τ))·(a(m+k+τ)-μ(m+τ,τ))]}/τσ(m,τ)σ(m+τ,τ)
+    func calculateNAC(datas: [[String]?]?, begin: Int, end: Int) -> Double {  //{∑<k=0...k=τ-1> [(a(m+k)-μ(m,τ))·(a(m+k+τ)-μ(m+τ,τ))]}/τσ(m,τ)σ(m+τ,τ)
         
         let τ = (end - begin + 1)
         let μ_m_τ = calculateAvg(datas, begin: begin, end: end)
         let σ_m_τ = calculateSD(datas, begin: begin, end: end)
-        var μ_m＋τ_τ: threeAxisData
-        var σ_m＋τ_τ: threeAxisData
+        var μ_m＋τ_τ: Double
+        var σ_m＋τ_τ: Double
         
         if (begin + τ) >= dataLen {
-            μ_m＋τ_τ = threeAxisData.init(x: 0, y: 0, z: 0)
-            σ_m＋τ_τ = threeAxisData.init(x: 0, y: 0, z: 0)
+            μ_m＋τ_τ = 0.00
+            σ_m＋τ_τ = 0.00
         } else {
-            μ_m＋τ_τ = calculateAvg(datas, begin: begin + τ, end: begin + τ + τ - 1)
-            σ_m＋τ_τ = calculateSD(datas, begin: begin + τ, end: begin + τ + τ - 1)
+            μ_m＋τ_τ = calculateAvg(datas, begin: begin + τ, end: end + τ)
+            σ_m＋τ_τ = calculateSD(datas, begin: begin + τ, end: end + τ)
         }
         
         
-        var sum_x = 0.00
-        var sum_y = 0.00
-        var sum_z = 0.00
+        var sum = 0.00
         
         for i in begin...end {
-            var temp1_x = 0.00
-            var temp1_y = 0.00
-            var temp1_z = 0.00
-            var temp2_x = 0.00
-            var temp2_y = 0.00
-            var temp2_z = 0.00
+            var temp1 = 0.00
+            var temp2 = 0.00
             
             if i < dataLen{
                 if !datas![i]!.isEmpty {
                     if datas![i]!.count == dataItemNumber {
-                        temp1_x += Double(datas![i]![1])! - μ_m_τ.x
-                        temp1_y += Double(datas![i]![2])! - μ_m_τ.y
-                        temp1_z += Double(datas![i]![3])! - μ_m_τ.z
+                        let norm = sqrt(square(Double(datas![i]![1])!) + square(Double(datas![i]![2])!) + square(Double(datas![i]![3])!))
+                        temp1 += (norm - μ_m_τ)
                     }
                 }
             } else {
-                temp1_x -= μ_m_τ.x
-                temp1_y -= μ_m_τ.y
-                temp1_z -= μ_m_τ.z
+                temp1 -= μ_m_τ
             }
             
             if (i + τ) < dataLen{
                 if !datas![i+τ]!.isEmpty {
                     if datas![i+τ]!.count == dataItemNumber {
-                        temp2_x += Double(datas![i+τ]![1])! - μ_m＋τ_τ.x
-                        temp2_y += Double(datas![i+τ]![2])! - μ_m＋τ_τ.y
-                        temp2_z += Double(datas![i+τ]![3])! - μ_m＋τ_τ.z
+                        let norm = sqrt(square(Double(datas![i+τ]![1])!) + square(Double(datas![i+τ]![2])!) + square(Double(datas![i+τ]![3])!))
+                        temp2 += (norm - μ_m＋τ_τ)
                     }
                 }
             } else {
-                temp2_x -= μ_m＋τ_τ.x
-                temp2_y -= μ_m＋τ_τ.y
-                temp2_z -= μ_m＋τ_τ.z
+                temp2 -= μ_m＋τ_τ
             }
             
-            sum_x += (temp1_x * temp2_x)
-            sum_y += (temp1_y * temp2_y)
-            sum_z += (temp1_z * temp2_z)
+            sum += (temp1 * temp2)
         }
         
-        let temp3_x = (Double(τ) * σ_m_τ.x * σ_m＋τ_τ.x)
-        let temp3_y = (Double(τ) * σ_m_τ.y * σ_m＋τ_τ.y)
-        let temp3_z = (Double(τ) * σ_m_τ.z * σ_m＋τ_τ.z)
+        let temp3 = (Double(τ) * σ_m_τ * σ_m＋τ_τ)
         
-        var NAC_x, NAC_y, NAC_z: Double
-        if temp3_x != 0 {
-            NAC_x = sum_x / temp3_x
+        var nac: Double
+        if temp3 != 0 {
+            nac = sum / temp3
         } else {
-            NAC_x = 0
+            nac = 0
         }
-        if temp3_y != 0{
-            NAC_y = sum_y / temp3_y
-        } else {
-            NAC_y = 0
-        }
-        if temp3_z != 0 {
-            NAC_z = sum_z / temp3_z
-        } else {
-            NAC_z = 0
-        }
-        
-        let nac = threeAxisData.init(x: NAC_x, y: NAC_y, z: NAC_z)
         
         return nac
     }
