@@ -16,10 +16,6 @@ class RecognizerViewController: UIViewController {
     @IBOutlet var poseTextField: UITextField!
     @IBOutlet var traceTextField: UITextField!
     
-    struct threeAxisData {
-        var x, y, z: Double
-    }
-    
     enum motionStatus: Int {
         case MOVING = -1
         case IDLE, WALKING
@@ -149,7 +145,7 @@ class RecognizerViewController: UIViewController {
         dataCount = 1
         dataEnd = dataLen - defaultMaxτ
         
-        timer = NSTimer.scheduledTimerWithTimeInterval(dataUpdateInterval, target: self, selector: #selector(refreshUI(_:)), userInfo: nil, repeats: true)
+        //timer = NSTimer.scheduledTimerWithTimeInterval(dataUpdateInterval, target: self, selector: #selector(refreshUI(_:)), userInfo: nil, repeats: true)
         
         for _ in 1...dataEnd{
             motionRecognition()
@@ -168,7 +164,7 @@ class RecognizerViewController: UIViewController {
                 //idle
                 status = .IDLE
                 print("Motion Recognized as IDLE with index: \(dataCount), sd: \(sd)")
-                outputString = "0, \(dataCount), \(sd)n"
+                outputString = "0, \(dataCount), \(sd)\n"
                 τMax = defaultMaxτ
                 τMin = defaultMinτ
             } else {
